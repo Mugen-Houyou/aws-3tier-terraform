@@ -166,7 +166,7 @@ resource "aws_route_table_association" "database" {
 
 # DB Subnet Group
 resource "aws_db_subnet_group" "main" {
-  name       = "${var.project_name}-db-subnet-group"
+  name       = "webapp-db-subnet-group"
   subnet_ids = aws_subnet.database[*].id
 
   tags = merge(var.common_tags, {
