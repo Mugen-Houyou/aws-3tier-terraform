@@ -1,0 +1,20 @@
+aws_region   = "ap-northeast-2"
+project_name = "3tier-webapp"
+environment  = "staging"
+
+# VPC Configuration - 스테이징 환경용 CIDR
+vpc_cidr = "10.1.0.0/16"
+
+# Subnet Configuration
+public_subnet_cidrs   = ["10.1.1.0/24", "10.1.2.0/24"]
+private_subnet_cidrs  = ["10.1.11.0/24", "10.1.12.0/24"]
+database_subnet_cidrs = ["10.1.21.0/24", "10.1.22.0/24"]
+
+# NAT Gateway - 스테이징에서는 고가용성 유지
+enable_nat_gateway = true
+
+# Security - 개발팀 IP만 허용
+allowed_ssh_cidrs = [
+  "203.0.113.0/32",  # 개발팀 사무실 IP
+  "198.51.100.0/32"  # VPN IP
+]

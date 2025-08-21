@@ -1,0 +1,19 @@
+aws_region   = "ap-northeast-2"
+project_name = "3tier-webapp"
+environment  = "prod"
+
+# VPC Configuration - 프로덕션 환경용 CIDR
+vpc_cidr = "10.2.0.0/16"
+
+# Subnet Configuration
+public_subnet_cidrs   = ["10.2.1.0/24", "10.2.2.0/24"]
+private_subnet_cidrs  = ["10.2.11.0/24", "10.2.12.0/24"]
+database_subnet_cidrs = ["10.2.21.0/24", "10.2.22.0/24"]
+
+# NAT Gateway - 프로덕션에서는 반드시 고가용성 유지
+enable_nat_gateway = true
+
+# Security - 매우 제한적인 접근
+allowed_ssh_cidrs = [
+  "203.0.113.10/32"  # 운영팀 전용 IP만
+]
