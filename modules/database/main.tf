@@ -22,9 +22,9 @@ resource "aws_secretsmanager_secret_version" "db_credentials" {
   })
 }
 
-# RDS MySQL Instance
-resource "aws_db_instance" "main" {
-  identifier = "webapp-database"
+# Primary RDS MySQL Instance (Master)
+resource "aws_db_instance" "primary" {
+  identifier = "webapp-database-primary"
 
   # Engine configuration
   engine         = "mysql"
@@ -47,7 +47,7 @@ resource "aws_db_instance" "main" {
   vpc_security_group_ids = [var.database_security_group_id]
   publicly_accessible    = false
 
-  # Backup configuration
+  # Backup configuration (필수 - Read Replica를 위해)
   backup_retention_period = var.backup_retention_period
   backup_window          = var.backup_window
   maintenance_window     = var.maintenance_window
@@ -65,13 +65,50 @@ resource "aws_db_instance" "main" {
   deletion_protection = var.deletion_protection
   skip_final_snapshot = !var.deletion_protection
 
-  # Multi-AZ for high availability
-  multi_az = var.multi_az
+  # Single-AZ for primary (Read Replica는 별도 AZ에 배치)
+  multi_az = false
 
   tags = merge(var.common_tags, {
-    Name = "${var.project_name}-database"
+    Name = "${var.project_name}-database-primary"
     Tier = "Database"
+    Role = "Primary"
   })
+}
+
+# Read Replica RDS Instance (Slave)
+resource "aws_db_instance" "read_replica" {
+  count = var.enable_read_replica ? 1 : 0
+
+  identifier = "webapp-database-replica"
+
+  # Read Replica configuration
+  replicate_source_db = aws_db_instance.primary.identifier
+  instance_class      = var.db_replica_instance_class
+
+  # Network configuration
+  vpc_security_group_ids = [var.database_security_group_id]
+  publicly_accessible    = false
+
+  # Monitoring and logging
+  monitoring_interval = 60
+  monitoring_role_arn = aws_iam_role.rds_monitoring.arn
+  
+  enabled_cloudwatch_logs_exports = ["error", "general", "slowquery"]
+
+  # Performance Insights
+  performance_insights_enabled = false
+
+  # Deletion protection
+  deletion_protection = var.deletion_protection
+  skip_final_snapshot = !var.deletion_protection
+
+  tags = merge(var.common_tags, {
+    Name = "${var.project_name}-database-replica"
+    Tier = "Database"
+    Role = "ReadReplica"
+  })
+
+  depends_on = [aws_db_instance.primary]
 }
 
 # IAM role for RDS monitoring

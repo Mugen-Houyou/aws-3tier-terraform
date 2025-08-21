@@ -95,3 +95,9 @@ variable "db_deletion_protection" {
   type        = bool
   default     = false
 }
+
+variable "enable_read_replica" {
+  description = "Enable read replica for RDS"
+  type        = bool
+  default     = true
+}

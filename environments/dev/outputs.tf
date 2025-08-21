@@ -82,9 +82,24 @@ output "web_private_ips" {
 }
 
 # Database Outputs
-output "db_endpoint" {
-  description = "RDS instance endpoint"
-  value       = module.database.db_endpoint
+output "primary_db_instance_id" {
+  description = "Primary RDS instance ID"
+  value       = module.database.primary_db_instance_id
+}
+
+output "primary_db_endpoint" {
+  description = "Primary RDS instance endpoint"
+  value       = module.database.primary_db_endpoint
+}
+
+output "replica_db_instance_id" {
+  description = "Read replica RDS instance ID"
+  value       = module.database.replica_db_instance_id
+}
+
+output "replica_db_endpoint" {
+  description = "Read replica RDS instance endpoint"
+  value       = module.database.replica_db_endpoint
 }
 
 output "db_port" {
@@ -97,7 +112,37 @@ output "db_name" {
   value       = module.database.db_name
 }
 
-output "db_secret_name" {
+output "secret_arn" {
+  description = "ARN of the secret containing database credentials"
+  value       = module.database.secret_arn
+}
+
+output "secret_name" {
   description = "Name of the secret containing database credentials"
   value       = module.database.secret_name
+}
+
+# Legacy outputs for backward compatibility
+output "db_endpoint" {
+  description = "Primary RDS instance endpoint (legacy)"
+  value       = module.database.primary_db_endpoint
+}
+
+output "db_secret_name" {
+  description = "Name of the secret containing database credentials (legacy)"
+  value       = module.database.secret_name
+}
+
+# Connection Information
+output "connection_info" {
+  description = "Connection information for the infrastructure"
+  value = {
+    bastion_ssh = "ssh -i ~/.ssh/aws-key ec2-user@${module.compute.bastion_public_ip}"
+    web_servers = [
+      for i, ip in module.compute.web_private_ips : 
+      "ssh -i ~/.ssh/aws-key -o ProxyJump=ec2-user@${module.compute.bastion_public_ip} ec2-user@${ip}"
+    ]
+    primary_database = "mysql -h ${module.database.primary_db_endpoint} -P ${module.database.db_port} -u admin -p ${module.database.db_name}"
+    replica_database = var.enable_read_replica ? "mysql -h ${module.database.replica_db_endpoint} -P ${module.database.db_port} -u admin -p ${module.database.db_name}" : "Read replica not enabled"
+  }
 }

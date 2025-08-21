@@ -32,7 +32,13 @@ variable "db_engine_version" {
 }
 
 variable "db_instance_class" {
-  description = "RDS instance class"
+  description = "RDS primary instance class"
+  type        = string
+  default     = "db.t3.micro"
+}
+
+variable "db_replica_instance_class" {
+  description = "RDS read replica instance class"
   type        = string
   default     = "db.t3.micro"
 }
@@ -50,7 +56,7 @@ variable "db_max_allocated_storage" {
 }
 
 variable "backup_retention_period" {
-  description = "Backup retention period in days"
+  description = "Backup retention period in days (minimum 1 for read replica)"
   type        = number
   default     = 7
 }
@@ -74,9 +80,15 @@ variable "deletion_protection" {
 }
 
 variable "multi_az" {
-  description = "Enable Multi-AZ deployment"
+  description = "Enable Multi-AZ deployment for high availability"
   type        = bool
   default     = false
+}
+
+variable "enable_read_replica" {
+  description = "Enable read replica creation"
+  type        = bool
+  default     = true
 }
 
 variable "common_tags" {
