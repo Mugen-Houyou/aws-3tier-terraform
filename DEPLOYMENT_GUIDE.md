@@ -126,6 +126,12 @@ aws ec2 describe-subnets --filters "Name=tag:Project,Values=3tier-webapp"
 
 # 보안 그룹 생성 확인
 aws ec2 describe-security-groups --filters "Name=tag:Project,Values=3tier-webapp"
+
+# EC2 인스턴스 확인
+aws ec2 describe-instances --filters "Name=tag:Project,Values=3tier-webapp"
+
+# RDS 인스턴스 확인
+aws rds describe-db-instances --query 'DBInstances[?contains(DBInstanceIdentifier, `webapp-database`)]'
 ```
 
 ### 2. Terraform 출력값 확인
@@ -137,6 +143,9 @@ terraform output
 # 특정 출력값 확인
 terraform output vpc_id
 terraform output public_subnet_ids
+terraform output primary_db_endpoint
+terraform output replica_db_endpoint
+terraform output connection_info
 ```
 
 ### 3. 네트워크 연결성 테스트
@@ -147,6 +156,39 @@ aws ec2 describe-nat-gateways --filter "Name=tag:Project,Values=3tier-webapp"
 
 # 라우팅 테이블 확인
 aws ec2 describe-route-tables --filters "Name=tag:Project,Values=3tier-webapp"
+```
+
+### 4. 데이터베이스 연결 테스트
+
+```bash
+# Bastion 호스트를 통한 데이터베이스 연결 테스트
+# 1. Bastion 호스트에 SSH 연결
+ssh -i ~/.ssh/aws-key ec2-user@<bastion_public_ip>
+
+# 2. Bastion에서 Primary DB 연결 테스트
+mysql -h <primary_db_endpoint> -P 3306 -u admin -p webapp
+
+# 3. Bastion에서 Read Replica 연결 테스트
+mysql -h <replica_db_endpoint> -P 3306 -u admin -p webapp
+```
+
+### 5. 데이터베이스 복제 상태 확인
+
+```bash
+# Read Replica 상태 확인
+aws rds describe-db-instances \
+    --db-instance-identifier webapp-database-replica \
+    --query 'DBInstances[0].StatusInfos'
+
+# 복제 지연 시간 확인 (CloudWatch 메트릭)
+aws cloudwatch get-metric-statistics \
+    --namespace AWS/RDS \
+    --metric-name ReplicaLag \
+    --dimensions Name=DBInstanceIdentifier,Value=webapp-database-replica \
+    --start-time $(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%S) \
+    --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
+    --period 300 \
+    --statistics Average
 ```
 
 ## 문제 해결
@@ -177,6 +219,32 @@ Error: VpcLimitExceeded
 ```
 **해결방법**: AWS 서비스 한도 확인 및 증가 요청
 
+#### 5. 데이터베이스 관련 오류
+
+##### Read Replica 생성 실패
+```
+Error: InvalidDBInstanceState: DB Instance is not in a state that allows read replica creation
+```
+**해결방법**: Primary 데이터베이스가 `available` 상태인지 확인
+
+##### 백업 설정 오류
+```
+Error: InvalidParameterValue: Backup retention period must be at least 1 to add a read replica
+```
+**해결방법**: Primary 데이터베이스의 백업 보존 기간을 1일 이상으로 설정
+
+##### 인스턴스 클래스 지원 오류
+```
+Error: InvalidParameterValue: The specified DB instance class is not supported for this engine version
+```
+**해결방법**: 해당 리전에서 지원하는 인스턴스 클래스로 변경
+
+##### 서브넷 그룹 오류
+```
+Error: InvalidDBSubnetGroupName: DB subnet group name must be lowercase
+```
+**해결방법**: DB 서브넷 그룹 이름을 소문자로 변경
+
 ### 디버깅 명령어
 
 ```bash
@@ -205,8 +273,25 @@ terraform plan -destroy
 
 ### 주의사항
 - 프로덕션 환경 삭제 시 특별한 주의 필요
-- 데이터베이스가 있는 경우 백업 확인 후 삭제
+- **데이터베이스 삭제 전 필수 확인사항**:
+  - 최종 스냅샷 생성 여부 확인
+  - 중요 데이터 백업 완료 확인
+  - Read Replica는 Primary보다 먼저 삭제됨
 - 삭제 후 AWS 콘솔에서 리소스 완전 삭제 확인
+- **데이터베이스 자격증명**: AWS Secrets Manager에서 별도 삭제 필요
+
+### 데이터베이스 수동 백업 (삭제 전 권장)
+
+```bash
+# 수동 스냅샷 생성
+aws rds create-db-snapshot \
+    --db-instance-identifier webapp-database-primary \
+    --db-snapshot-identifier webapp-database-final-snapshot-$(date +%Y%m%d%H%M%S)
+
+# 스냅샷 생성 상태 확인
+aws rds describe-db-snapshots \
+    --db-snapshot-identifier webapp-database-final-snapshot-*
+```
 
 ## 모니터링 및 유지보수
 
@@ -226,10 +311,17 @@ terraform plan -destroy
 
 현재 배포된 기본 인프라 위에 다음 구성 요소들을 추가할 예정입니다:
 
-1. **Compute 모듈**: EC2 인스턴스, Auto Scaling Groups
-2. **Load Balancer 모듈**: Application Load Balancer
-3. **Database 모듈**: RDS, ElastiCache
-4. **Monitoring 모듈**: CloudWatch, SNS
+1. **Load Balancer 모듈**: Application Load Balancer ⏳
+2. **Auto Scaling 모듈**: Auto Scaling Groups ⏳
+3. **Cache 모듈**: ElastiCache ⏳
+4. **Monitoring 모듈**: CloudWatch, SNS ⏳
+5. **CI/CD 모듈**: CodePipeline, CodeBuild ⏳
+
+### 현재 완료된 구성 요소 ✅
+- **VPC 모듈**: 네트워킹 인프라 완료
+- **Security Groups 모듈**: 보안 그룹 완료
+- **Compute 모듈**: EC2 인스턴스 (Bastion, Web Servers) 완료
+- **Database 모듈**: Master-Slave RDS 구성 완료
 
 각 모듈 추가 시 별도의 배포 가이드가 제공될 예정입니다.
 

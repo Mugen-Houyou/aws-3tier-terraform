@@ -49,6 +49,18 @@
 - **Database Security Group**: Web 서버에서의 데이터베이스 연결 허용
 - **Bastion Security Group**: 특정 IP에서의 SSH 허용
 
+### 데이터베이스 구성 (Master-Slave)
+- **Primary Database**: 읽기/쓰기 작업 처리
+  - MySQL 8.0 엔진
+  - 자동 백업 (7일 보존)
+  - Enhanced Monitoring 활성화
+  - 스토리지 암호화
+- **Read Replica**: 읽기 전용 작업 처리
+  - Primary에서 실시간 복제
+  - 읽기 성능 향상
+  - 부하 분산 지원
+  - 재해 복구 옵션
+
 ## 사용 방법
 
 ### 빠른 시작
@@ -102,13 +114,21 @@ terraform destroy
 - `outputs.tf`: 출력값 정의
 - `terraform.tfvars`: 환경별 변수 값
 
-## 확장 계획
+## 현재 구현된 기능
+
+### ✅ 완료된 모듈들
+1. **VPC 모듈**: 네트워킹 인프라 (VPC, 서브넷, 라우팅)
+2. **Security Groups 모듈**: 계층별 보안 그룹
+3. **Compute 모듈**: EC2 인스턴스 (Bastion, Web Servers)
+4. **Database 모듈**: Master-Slave RDS 구성 (Primary + Read Replica)
+
+### 🔄 확장 계획
 
 다음 모듈들을 추가할 예정입니다:
 
-1. **Compute 모듈**: EC2 인스턴스, Auto Scaling Groups
-2. **Load Balancer 모듈**: Application Load Balancer
-3. **Database 모듈**: RDS, ElastiCache
+1. **Load Balancer 모듈**: Application Load Balancer
+2. **Auto Scaling 모듈**: Auto Scaling Groups
+3. **Cache 모듈**: ElastiCache
 4. **Monitoring 모듈**: CloudWatch, SNS
 5. **CI/CD 모듈**: CodePipeline, CodeBuild
 
