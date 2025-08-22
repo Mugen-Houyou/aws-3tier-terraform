@@ -1,6 +1,6 @@
 #!/bin/bash
-yum update -y
-yum install -y httpd php php-mysqlnd htop tree wget curl
+dnf update -y
+dnf install -y httpd php php-mysqlnd htop tree wget curl
 
 # Start and enable Apache
 systemctl start httpd

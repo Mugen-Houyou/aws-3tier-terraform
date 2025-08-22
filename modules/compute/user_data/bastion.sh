@@ -1,6 +1,6 @@
 #!/bin/bash
-yum update -y
-yum install -y htop tree wget curl
+dnf update -y
+dnf install -y htop tree wget curl
 
 # Install AWS CLI v2
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
