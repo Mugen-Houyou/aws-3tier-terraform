@@ -69,7 +69,7 @@
 
 ### Redis 구성 (Master-Slave)
 - **Primary Redis**: 읽기/쓰기 작업 처리
-  - Redis 7.0 엔진
+  - Redis 8.0 엔진
   - 자동 백업 (5일 보존)
   - 저장 시 암호화 및 전송 중 암호화
   - AUTH 토큰 인증

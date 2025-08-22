@@ -27,7 +27,7 @@ variable "security_group_id" {
 variable "redis_version" {
   description = "Redis engine version"
   type        = string
-  default     = "7.0"
+  default     = "8.0"
 }
 
 variable "node_type" {

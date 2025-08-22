@@ -112,7 +112,7 @@ variable "enable_read_replica" {
 variable "redis_version" {
   description = "Redis engine version"
   type        = string
-  default     = "7.0"
+  default     = "8.0"
 }
 
 variable "redis_node_type" {

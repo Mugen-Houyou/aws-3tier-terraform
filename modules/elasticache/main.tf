@@ -11,7 +11,7 @@ resource "aws_elasticache_subnet_group" "main" {
 
 # ElastiCache Parameter Group for Redis
 resource "aws_elasticache_parameter_group" "redis" {
-  family = "redis7.x"
+  family = "redis8.x"
   name   = "${var.project_name}-redis-params"
 
   parameter {
