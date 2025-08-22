@@ -40,6 +40,12 @@ variable "database_subnet_cidrs" {
   default     = ["10.0.21.0/24", "10.0.22.0/24"]
 }
 
+variable "cache_subnet_cidrs" {
+  description = "CIDR blocks for cache subnets"
+  type        = list(string)
+  default     = ["10.0.31.0/24", "10.0.32.0/24"]
+}
+
 variable "enable_nat_gateway" {
   description = "Enable NAT Gateway for private subnets"
   type        = bool
@@ -98,6 +104,61 @@ variable "db_deletion_protection" {
 
 variable "enable_read_replica" {
   description = "Enable read replica for RDS"
+  type        = bool
+  default     = true
+}
+
+# Redis/ElastiCache Configuration
+variable "redis_version" {
+  description = "Redis engine version"
+  type        = string
+  default     = "7.0"
+}
+
+variable "redis_node_type" {
+  description = "ElastiCache node type for Redis"
+  type        = string
+  default     = "cache.t3.micro"
+}
+
+variable "redis_num_cache_nodes" {
+  description = "Number of cache nodes in the Redis replication group"
+  type        = number
+  default     = 2
+}
+
+variable "redis_snapshot_retention_limit" {
+  description = "Number of days to retain Redis automatic snapshots"
+  type        = number
+  default     = 5
+}
+
+variable "redis_at_rest_encryption_enabled" {
+  description = "Enable encryption at rest for Redis"
+  type        = bool
+  default     = true
+}
+
+variable "redis_transit_encryption_enabled" {
+  description = "Enable encryption in transit for Redis"
+  type        = bool
+  default     = true
+}
+
+variable "redis_auth_token_enabled" {
+  description = "Enable Redis AUTH token"
+  type        = bool
+  default     = true
+}
+
+variable "redis_multi_az_enabled" {
+  description = "Enable Multi-AZ deployment for Redis"
+  type        = bool
+  default     = true
+}
+
+variable "redis_automatic_failover_enabled" {
+  description = "Enable automatic failover for Redis (requires Multi-AZ)"
   type        = bool
   default     = true
 }

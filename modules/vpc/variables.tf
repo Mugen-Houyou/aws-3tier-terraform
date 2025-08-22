@@ -27,6 +27,12 @@ variable "database_subnet_cidrs" {
   default     = ["10.0.21.0/24", "10.0.22.0/24"]
 }
 
+variable "cache_subnet_cidrs" {
+  description = "CIDR blocks for cache subnets"
+  type        = list(string)
+  default     = ["10.0.31.0/24", "10.0.32.0/24"]
+}
+
 variable "enable_nat_gateway" {
   description = "Enable NAT Gateway for private subnets"
   type        = bool

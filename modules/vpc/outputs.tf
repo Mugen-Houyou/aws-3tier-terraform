@@ -28,6 +28,11 @@ output "database_subnet_ids" {
   value       = aws_subnet.database[*].id
 }
 
+output "cache_subnet_ids" {
+  description = "IDs of the cache subnets"
+  value       = aws_subnet.cache[*].id
+}
+
 output "public_subnet_cidrs" {
   description = "CIDR blocks of the public subnets"
   value       = aws_subnet.public[*].cidr_block
@@ -41,6 +46,11 @@ output "private_subnet_cidrs" {
 output "database_subnet_cidrs" {
   description = "CIDR blocks of the database subnets"
   value       = aws_subnet.database[*].cidr_block
+}
+
+output "cache_subnet_cidrs" {
+  description = "CIDR blocks of the cache subnets"
+  value       = aws_subnet.cache[*].cidr_block
 }
 
 output "nat_gateway_ids" {
@@ -76,4 +86,9 @@ output "private_route_table_ids" {
 output "database_route_table_id" {
   description = "ID of the database route table"
   value       = aws_route_table.database.id
+}
+
+output "cache_route_table_id" {
+  description = "ID of the cache route table"
+  value       = aws_route_table.cache.id
 }

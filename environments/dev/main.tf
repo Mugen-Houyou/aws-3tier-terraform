@@ -33,6 +33,7 @@ module "vpc" {
   public_subnet_cidrs   = var.public_subnet_cidrs
   private_subnet_cidrs  = var.private_subnet_cidrs
   database_subnet_cidrs = var.database_subnet_cidrs
+  cache_subnet_cidrs    = var.cache_subnet_cidrs
   enable_nat_gateway    = var.enable_nat_gateway
   common_tags           = local.common_tags
 }
@@ -77,4 +78,26 @@ module "compute" {
   common_tags                = local.common_tags
 
   depends_on = [module.database]
+}
+
+# ElastiCache Module
+module "elasticache" {
+  source = "../../modules/elasticache"
+
+  project_name                   = var.project_name
+  environment                    = var.environment
+  subnet_ids                     = module.vpc.cache_subnet_ids
+  security_group_id              = module.security_groups.redis_security_group_id
+  redis_version                  = var.redis_version
+  node_type                      = var.redis_node_type
+  num_cache_nodes                = var.redis_num_cache_nodes
+  snapshot_retention_limit       = var.redis_snapshot_retention_limit
+  at_rest_encryption_enabled     = var.redis_at_rest_encryption_enabled
+  transit_encryption_enabled     = var.redis_transit_encryption_enabled
+  auth_token_enabled             = var.redis_auth_token_enabled
+  multi_az_enabled               = var.redis_multi_az_enabled
+  automatic_failover_enabled     = var.redis_automatic_failover_enabled
+  common_tags                    = local.common_tags
+
+  depends_on = [module.vpc, module.security_groups]
 }

@@ -43,10 +43,16 @@
 - AZ-2: 10.0.22.0/24
 - 용도: RDS, ElastiCache
 
+#### Cache Subnets (Cache Tier)
+- AZ-1: 10.0.31.0/24
+- AZ-2: 10.0.32.0/24
+- 용도: Redis ElastiCache
+
 ### 보안 그룹
 - **ALB Security Group**: HTTP/HTTPS 트래픽 허용
 - **Web Security Group**: ALB에서의 트래픽과 Bastion에서의 SSH 허용
 - **Database Security Group**: Web 서버에서의 데이터베이스 연결 허용
+- **Redis Security Group**: Web 서버와 Bastion에서의 Redis 연결 허용
 - **Bastion Security Group**: 특정 IP에서의 SSH 허용
 
 ### 데이터베이스 구성 (Master-Slave)
@@ -60,6 +66,18 @@
   - 읽기 성능 향상
   - 부하 분산 지원
   - 재해 복구 옵션
+
+### Redis 구성 (Master-Slave)
+- **Primary Redis**: 읽기/쓰기 작업 처리
+  - Redis 7.0 엔진
+  - 자동 백업 (5일 보존)
+  - 저장 시 암호화 및 전송 중 암호화
+  - AUTH 토큰 인증
+- **Read Replica**: 읽기 전용 작업 처리
+  - Primary에서 실시간 복제
+  - Multi-AZ 배포
+  - 자동 장애 조치
+  - 캐시 성능 향상
 
 ## 사용 방법
 
@@ -121,6 +139,7 @@ terraform destroy
 2. **Security Groups 모듈**: 계층별 보안 그룹
 3. **Compute 모듈**: EC2 인스턴스 (Bastion, Web Servers)
 4. **Database 모듈**: Master-Slave RDS 구성 (Primary + Read Replica)
+5. **ElastiCache 모듈**: Master-Slave Redis 구성 (Primary + Read Replica)
 
 ### 🔄 확장 계획
 
@@ -128,9 +147,8 @@ terraform destroy
 
 1. **Load Balancer 모듈**: Application Load Balancer
 2. **Auto Scaling 모듈**: Auto Scaling Groups
-3. **Cache 모듈**: ElastiCache
-4. **Monitoring 모듈**: CloudWatch, SNS
-5. **CI/CD 모듈**: CodePipeline, CodeBuild
+3. **Monitoring 모듈**: CloudWatch, SNS
+4. **CI/CD 모듈**: CodePipeline, CodeBuild
 
 ## 모범 사례
 

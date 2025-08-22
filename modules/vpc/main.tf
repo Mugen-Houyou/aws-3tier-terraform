@@ -69,6 +69,21 @@ resource "aws_subnet" "database" {
   })
 }
 
+# Cache Subnets (Cache Tier)
+resource "aws_subnet" "cache" {
+  count = length(var.cache_subnet_cidrs)
+
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = var.cache_subnet_cidrs[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  tags = merge(var.common_tags, {
+    Name = "${var.project_name}-cache-subnet-${count.index + 1}"
+    Tier = "Cache"
+    Type = "Private"
+  })
+}
+
 # Elastic IPs for NAT Gateways
 resource "aws_eip" "nat" {
   count = var.enable_nat_gateway ? length(var.public_subnet_cidrs) : 0
@@ -162,6 +177,24 @@ resource "aws_route_table_association" "database" {
 
   subnet_id      = aws_subnet.database[count.index].id
   route_table_id = aws_route_table.database.id
+}
+
+# Route Table for Cache Subnets
+resource "aws_route_table" "cache" {
+  vpc_id = aws_vpc.main.id
+
+  tags = merge(var.common_tags, {
+    Name = "${var.project_name}-cache-rt"
+    Type = "Cache"
+  })
+}
+
+# Route Table Associations for Cache Subnets
+resource "aws_route_table_association" "cache" {
+  count = length(aws_subnet.cache)
+
+  subnet_id      = aws_subnet.cache[count.index].id
+  route_table_id = aws_route_table.cache.id
 }
 
 # DB Subnet Group

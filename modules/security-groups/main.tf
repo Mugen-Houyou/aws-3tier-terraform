@@ -149,3 +149,41 @@ resource "aws_security_group" "bastion" {
     create_before_destroy = true
   }
 }
+
+# Redis/ElastiCache Security Group
+resource "aws_security_group" "redis" {
+  name_prefix = "${var.project_name}-redis-"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    description     = "Redis from Web Servers"
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = [aws_security_group.web.id]
+  }
+
+  ingress {
+    description     = "Redis from Bastion (for management)"
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(var.common_tags, {
+    Name = "${var.project_name}-redis-sg"
+    Tier = "Cache"
+  })
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}

@@ -24,6 +24,11 @@ output "database_subnet_ids" {
   value       = module.vpc.database_subnet_ids
 }
 
+output "cache_subnet_ids" {
+  description = "IDs of the cache subnets"
+  value       = module.vpc.cache_subnet_ids
+}
+
 output "nat_gateway_ids" {
   description = "IDs of the NAT Gateways"
   value       = module.vpc.nat_gateway_ids
@@ -58,6 +63,11 @@ output "database_security_group_id" {
 output "bastion_security_group_id" {
   description = "ID of the bastion security group"
   value       = module.security_groups.bastion_security_group_id
+}
+
+output "redis_security_group_id" {
+  description = "ID of the Redis security group"
+  value       = module.security_groups.redis_security_group_id
 }
 
 # Compute Outputs
@@ -144,5 +154,43 @@ output "connection_info" {
     ]
     primary_database = "mysql -h ${module.database.primary_db_endpoint} -P ${module.database.db_port} -u admin -p ${module.database.db_name}"
     replica_database = var.enable_read_replica ? "mysql -h ${module.database.replica_db_endpoint} -P ${module.database.db_port} -u admin -p ${module.database.db_name}" : "Read replica not enabled"
+    redis_primary = "redis-cli -h ${module.elasticache.redis_primary_endpoint} -p ${module.elasticache.redis_port} ${module.elasticache.redis_auth_token_secret_name != null ? "-a <AUTH_TOKEN>" : ""}"
+    redis_reader = module.elasticache.redis_reader_endpoint != null ? "redis-cli -h ${module.elasticache.redis_reader_endpoint} -p ${module.elasticache.redis_port} ${module.elasticache.redis_auth_token_secret_name != null ? "-a <AUTH_TOKEN>" : ""}" : "Reader endpoint not available"
   }
+}
+
+# Redis/ElastiCache Outputs
+output "redis_replication_group_id" {
+  description = "ID of the Redis replication group"
+  value       = module.elasticache.redis_replication_group_id
+}
+
+output "redis_primary_endpoint" {
+  description = "Primary endpoint for Redis"
+  value       = module.elasticache.redis_primary_endpoint
+}
+
+output "redis_reader_endpoint" {
+  description = "Reader endpoint for Redis"
+  value       = module.elasticache.redis_reader_endpoint
+}
+
+output "redis_port" {
+  description = "Redis port"
+  value       = module.elasticache.redis_port
+}
+
+output "redis_member_clusters" {
+  description = "List of Redis member cluster IDs"
+  value       = module.elasticache.redis_member_clusters
+}
+
+output "redis_auth_token_secret_arn" {
+  description = "ARN of the secret containing Redis AUTH token"
+  value       = module.elasticache.redis_auth_token_secret_arn
+}
+
+output "redis_auth_token_secret_name" {
+  description = "Name of the secret containing Redis AUTH token"
+  value       = module.elasticache.redis_auth_token_secret_name
 }
