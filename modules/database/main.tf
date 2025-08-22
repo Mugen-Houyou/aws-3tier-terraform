@@ -2,6 +2,8 @@
 resource "random_password" "db_password" {
   length  = 16
   special = true
+  # Exclude characters that are not allowed in RDS passwords
+  override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
 # AWS Secrets Manager secret for database credentials
